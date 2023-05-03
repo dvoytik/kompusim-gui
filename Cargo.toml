@@ -7,12 +7,13 @@ edition = "2021"
 
 [dependencies]
 egui = "0.21.0"
-eframe = { version = "0.21.0", default-features = false, featurese = [
+eframe = { version = "0.21.0", default-features = false, features = [
 #"accesskit",
-  "deafault_fonts",
-  "glow",
-  "persistance",
- "wayland",
+  "default_fonts",
+  #"glow",
+  "wgpu",
+  "persistence",
+  #"wayland",
 ]}
 
 # app persistence:

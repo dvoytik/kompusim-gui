@@ -3,7 +3,7 @@ use eframe;
 /// We derive Deserialize/Serialize so we can persist app state on shutdown.
 #[derive(serde::Deserialize, serde::Serialize)]
 #[serde(default)] // if we add new fields, give them default values when deserializing old state
-pub struct TemplateApp {
+pub struct KompusimApp {
     // Example stuff:
     label: String,
 
@@ -12,7 +12,7 @@ pub struct TemplateApp {
     value: f32,
 }
 
-impl Default for TemplateApp {
+impl Default for KompusimApp {
     fn default() -> Self {
         Self {
             // Example stuff:
@@ -22,7 +22,7 @@ impl Default for TemplateApp {
     }
 }
 
-impl TemplateApp {
+impl KompusimApp {
     /// Called once before the first frame.
     pub fn new(cc: &eframe::CreationContext<'_>) -> Self {
         // This is also where you can customize the look and feel of egui using
@@ -30,20 +30,19 @@ impl TemplateApp {
 
         // Load previous app state (if any).
         // Note that you must enable the `persistence` feature for this to work.
-        // TODO: fix:
-        //if let Some(storage) = cc.storage {
-        //     return eframe::get_value(storage, eframe::APP_KEY).unwrap_or_default();
-        // }
+        if let Some(storage) = cc.storage {
+            return eframe::get_value(storage, eframe::APP_KEY).unwrap_or_default();
+        }
 
         Default::default()
     }
 }
 
-impl eframe::App for TemplateApp {
+impl eframe::App for KompusimApp {
     /// Called by the frame work to save state before shutdown.
-    // fn save(&mut self, storage: &mut dyn eframe::Storage) {
-    //     eframe::set_value(storage, eframe::APP_KEY, self);
-    // }
+    fn save(&mut self, storage: &mut dyn eframe::Storage) {
+        eframe::set_value(storage, eframe::APP_KEY, self);
+    }
 
     /// Called each time the UI needs repainting, which may be many times per second.
     /// Put your widgets into a `SidePanel`, `TopPanel`, `CentralPanel`, `Window` or `Area`.
@@ -97,23 +96,16 @@ impl eframe::App for TemplateApp {
 
         egui::CentralPanel::default().show(ctx, |ui| {
             // The central panel the region left after adding TopPanel's and SidePanel's
-
-            ui.heading("eframe template");
-            ui.hyperlink("https://github.com/emilk/eframe_template");
-            ui.add(egui::github_link_file!(
-                "https://github.com/emilk/eframe_template/blob/master/",
-                "Source code."
-            ));
+            ui.heading("Kompusim");
+            ui.hyperlink("https://github.com/dvoytik/kompusim-gui");
             egui::warn_if_debug_build(ui);
         });
 
-        if false {
-            egui::Window::new("Window").show(ctx, |ui| {
-                ui.label("Windows can be moved by dragging them.");
-                ui.label("They are automatically sized based on contents.");
-                ui.label("You can turn on resizing and scrolling if you like.");
-                ui.label("You would normally choose either panels OR windows.");
-            });
-        }
+        egui::Window::new("Window").show(ctx, |ui| {
+            ui.label("Windows can be moved by dragging them.");
+            ui.label("They are automatically sized based on contents.");
+            ui.label("You can turn on resizing and scrolling if you like.");
+            ui.label("You would normally choose either panels OR windows.");
+        });
     }
 }

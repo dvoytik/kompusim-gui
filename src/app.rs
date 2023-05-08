@@ -42,12 +42,12 @@ impl KompusimApp {
 
         let text_height = egui::TextStyle::Body.resolve(ui.style()).size;
 
-        let mut table = TableBuilder::new(ui)
+        let table = TableBuilder::new(ui)
             .striped(true)
             .resizable(true)
             .cell_layout(egui::Layout::left_to_right(egui::Align::Center))
             .column(Column::auto())
-            .column(Column::initial(100.0).range(40.0..=300.0))
+            .column(Column::initial(100.0).at_least(40.0).clip(false))
             .column(Column::initial(100.0).at_least(40.0).clip(true))
             .column(Column::remainder())
             .min_scrolled_height(0.0);
@@ -62,22 +62,22 @@ impl KompusimApp {
                     ui.strong("Row");
                 });
                 header.col(|ui| {
-                    ui.strong("Expanding content");
+                    ui.strong("Address");
                 });
                 header.col(|ui| {
-                    ui.strong("Clipped text");
+                    ui.strong("Instruction");
                 });
                 header.col(|ui| {
                     ui.strong("Content");
                 });
             })
-            .body(|mut body| {
+            .body(|body| {
                 body.rows(text_height, 100, |row_index, mut row| {
                     row.col(|ui| {
                         ui.label(row_index.to_string());
                     });
                     row.col(|ui| {
-                        expanding_content(ui);
+                        ui.label(long_text(row_index));
                     });
                     row.col(|ui| {
                         ui.label(long_text(row_index));
@@ -153,14 +153,14 @@ impl eframe::App for KompusimApp {
             egui::warn_if_debug_build(ui);
         });
 
-        egui::Window::new("Window").show(ctx, |ui| {
-            ui.label("Windows can be moved by dragging them.");
-            ui.label("They are automatically sized based on contents.");
-            ui.label("You can turn on resizing and scrolling if you like.");
-            ui.label("You would normally choose either panels OR windows.");
+        egui::Window::new("Instructions").show(ctx, |ui| {
+            egui::ScrollArea::vertical().show(ui, |ui| {
+                self.table_ui(ui);
+            });
         });
     }
 }
+
 fn expanding_content(ui: &mut egui::Ui) {
     let width = ui.available_width().clamp(20.0, 200.0);
     let height = ui.available_height();
@@ -174,8 +174,4 @@ fn expanding_content(ui: &mut egui::Ui) {
 
 fn long_text(row_index: usize) -> String {
     format!("Row {row_index} has some long text that you may want to clip, or it will take up too much horizontal space!")
-}
-
-fn thick_row(row_index: usize) -> bool {
-    row_index % 6 == 0
 }

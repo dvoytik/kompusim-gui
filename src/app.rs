@@ -36,6 +36,58 @@ impl KompusimApp {
 
         Default::default()
     }
+
+    fn table_ui(&mut self, ui: &mut egui::Ui) {
+        use egui_extras::{Column, TableBuilder};
+
+        let text_height = egui::TextStyle::Body.resolve(ui.style()).size;
+
+        let mut table = TableBuilder::new(ui)
+            .striped(true)
+            .resizable(true)
+            .cell_layout(egui::Layout::left_to_right(egui::Align::Center))
+            .column(Column::auto())
+            .column(Column::initial(100.0).range(40.0..=300.0))
+            .column(Column::initial(100.0).at_least(40.0).clip(true))
+            .column(Column::remainder())
+            .min_scrolled_height(0.0);
+
+        // if let Some(row_nr) = self.scroll_to_row.take() {
+        //     table = table.scroll_to_row(row_nr, None);
+        // }
+
+        table
+            .header(20.0, |mut header| {
+                header.col(|ui| {
+                    ui.strong("Row");
+                });
+                header.col(|ui| {
+                    ui.strong("Expanding content");
+                });
+                header.col(|ui| {
+                    ui.strong("Clipped text");
+                });
+                header.col(|ui| {
+                    ui.strong("Content");
+                });
+            })
+            .body(|mut body| {
+                body.rows(text_height, 100, |row_index, mut row| {
+                    row.col(|ui| {
+                        ui.label(row_index.to_string());
+                    });
+                    row.col(|ui| {
+                        expanding_content(ui);
+                    });
+                    row.col(|ui| {
+                        ui.label(long_text(row_index));
+                    });
+                    row.col(|ui| {
+                        ui.add(egui::Label::new("Thousands of rows of even height").wrap(false));
+                    });
+                })
+            });
+    }
 }
 
 impl eframe::App for KompusimApp {
@@ -108,4 +160,22 @@ impl eframe::App for KompusimApp {
             ui.label("You would normally choose either panels OR windows.");
         });
     }
+}
+fn expanding_content(ui: &mut egui::Ui) {
+    let width = ui.available_width().clamp(20.0, 200.0);
+    let height = ui.available_height();
+    let (rect, _response) = ui.allocate_exact_size(egui::vec2(width, height), egui::Sense::hover());
+    ui.painter().hline(
+        rect.x_range(),
+        rect.center().y,
+        (1.0, ui.visuals().text_color()),
+    );
+}
+
+fn long_text(row_index: usize) -> String {
+    format!("Row {row_index} has some long text that you may want to clip, or it will take up too much horizontal space!")
+}
+
+fn thick_row(row_index: usize) -> bool {
+    row_index % 6 == 0
 }

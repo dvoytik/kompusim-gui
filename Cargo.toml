@@ -15,6 +15,7 @@ eframe = { version = "0.21.0", default-features = false, features = [
   "persistence",
   #"wayland",
 ]}
+egui_extras = "0.21.0"
 
 # app persistence:
 serde = { version = "1", features = ["derive"] }

@@ -161,17 +161,6 @@ impl eframe::App for KompusimApp {
     }
 }
 
-fn expanding_content(ui: &mut egui::Ui) {
-    let width = ui.available_width().clamp(20.0, 200.0);
-    let height = ui.available_height();
-    let (rect, _response) = ui.allocate_exact_size(egui::vec2(width, height), egui::Sense::hover());
-    ui.painter().hline(
-        rect.x_range(),
-        rect.center().y,
-        (1.0, ui.visuals().text_color()),
-    );
-}
-
 fn long_text(row_index: usize) -> String {
     format!("Row {row_index} has some long text that you may want to clip, or it will take up too much horizontal space!")
 }

@@ -1,12 +1,16 @@
 use eframe;
 
-/// We derive Deserialize/Serialize so we can persist app state on shutdown.
+use crate::instr_list::InstrList;
+
+/// Deserialize/Serialize so we can persist app state on shutdown.
 #[derive(serde::Deserialize, serde::Serialize)]
-#[serde(default)] // if we add new fields, give them default values when deserializing old state
+#[serde(default)]
 pub struct KompusimApp {
     // Example stuff:
     label: String,
 
+    show_settings: bool,
+    instr_list: InstrList,
     // this how you opt-out of serialization of a member
     #[serde(skip)]
     value: f32,
@@ -15,9 +19,10 @@ pub struct KompusimApp {
 impl Default for KompusimApp {
     fn default() -> Self {
         Self {
-            // Example stuff:
-            label: "Hello World!".to_owned(),
-            value: 2.7,
+            label: "Kompusim".to_owned(),
+            show_settings: false,
+            instr_list: InstrList::default(),
+            value: 2.7, // TODO: remove
         }
     }
 }
@@ -36,58 +41,6 @@ impl KompusimApp {
 
         Default::default()
     }
-
-    fn table_ui(&mut self, ui: &mut egui::Ui) {
-        use egui_extras::{Column, TableBuilder};
-
-        let text_height = egui::TextStyle::Body.resolve(ui.style()).size;
-
-        let table = TableBuilder::new(ui)
-            .striped(true)
-            .resizable(true)
-            .cell_layout(egui::Layout::left_to_right(egui::Align::Center))
-            .column(Column::auto())
-            .column(Column::initial(100.0).at_least(40.0).clip(false))
-            .column(Column::initial(100.0).at_least(40.0).clip(true))
-            .column(Column::remainder())
-            .min_scrolled_height(0.0);
-
-        // if let Some(row_nr) = self.scroll_to_row.take() {
-        //     table = table.scroll_to_row(row_nr, None);
-        // }
-
-        table
-            .header(20.0, |mut header| {
-                header.col(|ui| {
-                    ui.strong("Row");
-                });
-                header.col(|ui| {
-                    ui.strong("Address");
-                });
-                header.col(|ui| {
-                    ui.strong("Instruction");
-                });
-                header.col(|ui| {
-                    ui.strong("Content");
-                });
-            })
-            .body(|body| {
-                body.rows(text_height, 100, |row_index, mut row| {
-                    row.col(|ui| {
-                        ui.label(row_index.to_string());
-                    });
-                    row.col(|ui| {
-                        ui.label(long_text(row_index));
-                    });
-                    row.col(|ui| {
-                        ui.label(long_text(row_index));
-                    });
-                    row.col(|ui| {
-                        ui.add(egui::Label::new("Thousands of rows of even height").wrap(false));
-                    });
-                })
-            });
-    }
 }
 
 impl eframe::App for KompusimApp {
@@ -99,20 +52,33 @@ impl eframe::App for KompusimApp {
     /// Called each time the UI needs repainting, which may be many times per second.
     /// Put your widgets into a `SidePanel`, `TopPanel`, `CentralPanel`, `Window` or `Area`.
     fn update(&mut self, ctx: &egui::Context, _frame: &mut eframe::Frame) {
-        let Self { label, value } = self;
+        let Self {
+            label,
+            show_settings,
+            instr_list,
+            value,
+        } = self;
 
         // Examples of how to create different panels and windows.
         // Pick whichever suits you.
         // Tip: a good default choice is to just keep the `CentralPanel`.
         // For inspiration and more examples, go to https://emilk.github.io/egui
 
-        #[cfg(not(target_arch = "wasm32"))] // no File->Quit on web pages!
         egui::TopBottomPanel::top("top_panel").show(ctx, |ui| {
             // The top panel is often a good place for a menu bar:
             egui::menu::bar(ui, |ui| {
                 ui.menu_button("File", |ui| {
                     if ui.button("Quit").clicked() {
+                        #[cfg(not(target_arch = "wasm32"))] // no File->Quit on web pages!
                         _frame.close();
+                    }
+                });
+                ui.menu_button("Windows", |ui| {
+                    if ui.button("Instruction list").clicked() {
+                        instr_list.open();
+                    }
+                    if ui.button("Settings").clicked() {
+                        *show_settings = true;
                     }
                 });
             });
@@ -153,14 +119,12 @@ impl eframe::App for KompusimApp {
             egui::warn_if_debug_build(ui);
         });
 
-        egui::Window::new("Instructions").show(ctx, |ui| {
-            egui::ScrollArea::vertical().show(ui, |ui| {
-                self.table_ui(ui);
-            });
-        });
-    }
-}
+        instr_list.show(ctx);
 
-fn long_text(row_index: usize) -> String {
-    format!("Row {row_index} has some long text that you may want to clip, or it will take up too much horizontal space!")
+        egui::Window::new("Settings")
+            .open(show_settings)
+            .show(ctx, |ui| {
+                egui::ScrollArea::vertical().show(ui, |ui| ctx.settings_ui(ui));
+            });
+    }
 }

@@ -2,3 +2,4 @@
 
 mod app;
 pub use app::KompusimApp;
+mod instr_list;

@@ -1,6 +1,6 @@
 use eframe;
 
-use crate::instr_list::InstrList;
+use crate::{decode_instr::DecodeInstr, instr_list::InstrList};
 
 /// Deserialize/Serialize so we can persist app state on shutdown.
 #[derive(serde::Deserialize, serde::Serialize)]
@@ -11,6 +11,7 @@ pub struct KompusimApp {
 
     show_settings: bool,
     instr_list: InstrList,
+    decode_instr: DecodeInstr,
     // this how you opt-out of serialization of a member
     #[serde(skip)]
     value: f32,
@@ -22,6 +23,7 @@ impl Default for KompusimApp {
             label: "Kompusim".to_owned(),
             show_settings: false,
             instr_list: InstrList::default(),
+            decode_instr: DecodeInstr::default(),
             value: 2.7, // TODO: remove
         }
     }
@@ -56,29 +58,36 @@ impl eframe::App for KompusimApp {
             label,
             show_settings,
             instr_list,
+            decode_instr,
             value,
         } = self;
-
-        // Examples of how to create different panels and windows.
-        // Pick whichever suits you.
-        // Tip: a good default choice is to just keep the `CentralPanel`.
-        // For inspiration and more examples, go to https://emilk.github.io/egui
 
         egui::TopBottomPanel::top("top_panel").show(ctx, |ui| {
             // The top panel is often a good place for a menu bar:
             egui::menu::bar(ui, |ui| {
                 ui.menu_button("File", |ui| {
+                    if ui.button("Settings").clicked() {
+                        *show_settings = true;
+                        ui.close_menu();
+                    }
                     if ui.button("Quit").clicked() {
                         #[cfg(not(target_arch = "wasm32"))] // no File->Quit on web pages!
                         _frame.close();
                     }
                 });
-                ui.menu_button("Windows", |ui| {
+                ui.menu_button("Instructions", |ui| {
                     if ui.button("Instruction list").clicked() {
                         instr_list.open();
+                        ui.close_menu();
                     }
-                    if ui.button("Settings").clicked() {
-                        *show_settings = true;
+                    if ui.button("Decode instruction").clicked() {
+                        decode_instr.open();
+                        ui.close_menu();
+                    }
+                });
+                ui.menu_button("Help", |ui| {
+                    if ui.button("About").clicked() {
+                        ui.close_menu();
                     }
                 });
             });
@@ -120,6 +129,8 @@ impl eframe::App for KompusimApp {
         });
 
         instr_list.show(ctx);
+
+        decode_instr.show(ctx);
 
         egui::Window::new("Settings")
             .open(show_settings)

@@ -25,7 +25,7 @@ impl DecodeInstr {
 
     pub fn show(&mut self, ctx: &egui::Context) {
         let mut open = self.window_open;
-        egui::Window::new("Decode instructions")
+        egui::Window::new("Instruction decoder")
             .open(&mut open)
             .resizable(true)
             .default_width(400.0)
@@ -41,8 +41,14 @@ impl DecodeInstr {
             .spacing([40.0, 4.0])
             .striped(true)
             .show(ui, |ui| {
-                ui.label("Instruction:");
+                ui.label("Hexadecimal");
                 ui.add(egui::TextEdit::singleline(&mut self.instr_hex).hint_text("in hex"));
+                ui.end_row();
+                ui.label("Binary");
+                ui.label("0000 0000 0000 0000 0000 0000 0000 0000");
+                ui.end_row();
+                ui.label("Assemblr");
+                ui.label("bne x0, x0, 0x8000004");
                 ui.end_row();
             });
     }

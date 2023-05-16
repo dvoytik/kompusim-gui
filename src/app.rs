@@ -1,4 +1,5 @@
 use eframe;
+use egui::Ui;
 
 use crate::{decode_instr::DecodeInstr, instr_list::InstrList};
 
@@ -85,6 +86,14 @@ impl eframe::App for KompusimApp {
                         ui.close_menu();
                     }
                 });
+                ui.menu_button("View", |ui| {
+                    if ui.button("Increase font").clicked() {
+                        ui.close_menu();
+                    }
+                    if ui.button("Decrease font").clicked() {
+                        ui.close_menu();
+                    }
+                });
                 ui.menu_button("Help", |ui| {
                     if ui.button("About").clicked() {
                         ui.close_menu();
@@ -139,3 +148,50 @@ impl eframe::App for KompusimApp {
             });
     }
 }
+
+// fn text_styles_ui(ui: &mut Ui, text_styles: &mut BTreeMap<TextStyle, FontId>) -> Response {
+//     ui.vertical(|ui| {
+//         crate::Grid::new("text_styles").show(ui, |ui| {
+//             for (text_style, font_id) in text_styles.iter_mut() {
+//                 ui.label(RichText::new(text_style.to_string()).font(font_id.clone()));
+//                 crate::introspection::font_id_ui(ui, font_id);
+//                 ui.end_row();
+//             }
+//         });
+//         crate::reset_button_with(ui, text_styles, default_text_styles());
+//     })
+//     .response
+// }
+
+fn increase_font(ui: &mut Ui) {
+    let mut text_styles = ui.style_mut().text_styles();
+    //ui.vertical(|ui| {
+    //crate::Grid::new("text_styles").show(ui, |ui| {
+    for (text_style, font_id) in text_styles.iter_mut() {
+        //ui.label(RichText::new(text_style.to_string()).font(font_id.clone()));
+        //crate::introspection::font_id_ui(ui, font_id);
+        //ui.end_row();
+        font_id.size += 1.0;
+    }
+    //});
+    //crate::reset_button_with(ui, text_styles, default_text_styles());
+    //})
+    //.response
+}
+
+// https://docs.rs/egui/latest/egui/style/struct.Style.html
+    /// let mut style = (*ctx.style()).clone();
+    ///
+    /// // Redefine text_styles
+    /// style.text_styles = [
+    ///   (Heading, FontId::new(30.0, Proportional)),
+    ///   (Name("Heading2".into()), FontId::new(25.0, Proportional)),
+    ///   (Name("Context".into()), FontId::new(23.0, Proportional)),
+    ///   (Body, FontId::new(18.0, Proportional)),
+    ///   (Monospace, FontId::new(14.0, Proportional)),
+    ///   (Button, FontId::new(14.0, Proportional)),
+    ///   (Small, FontId::new(10.0, Proportional)),
+    /// ].into();
+    ///
+    /// // Mutate global style with above changes
+    /// ctx.set_style(style);

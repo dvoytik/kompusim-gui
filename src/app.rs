@@ -1,5 +1,4 @@
 use eframe;
-use egui::Ui;
 
 use crate::{decode_instr::DecodeInstr, instr_list::InstrList};
 
@@ -7,9 +6,10 @@ use crate::{decode_instr::DecodeInstr, instr_list::InstrList};
 #[derive(serde::Deserialize, serde::Serialize)]
 #[serde(default)]
 pub struct KompusimApp {
-    // Example stuff:
     label: String,
 
+    /// -+ to the default font size
+    font_delta: f32,
     show_settings: bool,
     instr_list: InstrList,
     decode_instr: DecodeInstr,
@@ -23,6 +23,7 @@ impl Default for KompusimApp {
         Self {
             label: "Kompusim".to_owned(),
             show_settings: false,
+            font_delta: 0.0,
             instr_list: InstrList::default(),
             decode_instr: DecodeInstr::default(),
             value: 2.7, // TODO: remove
@@ -37,9 +38,11 @@ impl KompusimApp {
         // `cc.egui_ctx.set_visuals` and `cc.egui_ctx.set_fonts`.
 
         // Load previous app state (if any).
-        // Note that you must enable the `persistence` feature for this to work.
         if let Some(storage) = cc.storage {
-            return eframe::get_value(storage, eframe::APP_KEY).unwrap_or_default();
+            let app: Self = eframe::get_value(storage, eframe::APP_KEY).unwrap_or_default();
+            println!("font_delta: {}", app.font_delta);
+            set_all_fonts_size(&cc.egui_ctx, app.font_delta);
+            return app;
         }
 
         Default::default()
@@ -58,6 +61,7 @@ impl eframe::App for KompusimApp {
         let Self {
             label,
             show_settings,
+            font_delta,
             instr_list,
             decode_instr,
             value,
@@ -88,9 +92,13 @@ impl eframe::App for KompusimApp {
                 });
                 ui.menu_button("View", |ui| {
                     if ui.button("Increase font").clicked() {
+                        println!("\nDBG: inc: font_delta: {}\n", font_delta);
+                        increase_all_fonts(ctx, font_delta);
                         ui.close_menu();
                     }
                     if ui.button("Decrease font").clicked() {
+                        println!("\nDBG: decr: font_delta: {}\n", font_delta);
+                        decrease_all_fonts(ctx, font_delta);
                         ui.close_menu();
                     }
                 });
@@ -149,49 +157,29 @@ impl eframe::App for KompusimApp {
     }
 }
 
-// fn text_styles_ui(ui: &mut Ui, text_styles: &mut BTreeMap<TextStyle, FontId>) -> Response {
-//     ui.vertical(|ui| {
-//         crate::Grid::new("text_styles").show(ui, |ui| {
-//             for (text_style, font_id) in text_styles.iter_mut() {
-//                 ui.label(RichText::new(text_style.to_string()).font(font_id.clone()));
-//                 crate::introspection::font_id_ui(ui, font_id);
-//                 ui.end_row();
-//             }
-//         });
-//         crate::reset_button_with(ui, text_styles, default_text_styles());
-//     })
-//     .response
-// }
-
-fn increase_font(ui: &mut Ui) {
-    let mut text_styles = ui.style_mut().text_styles();
-    //ui.vertical(|ui| {
-    //crate::Grid::new("text_styles").show(ui, |ui| {
-    for (text_style, font_id) in text_styles.iter_mut() {
-        //ui.label(RichText::new(text_style.to_string()).font(font_id.clone()));
-        //crate::introspection::font_id_ui(ui, font_id);
-        //ui.end_row();
-        font_id.size += 1.0;
+fn increase_all_fonts(ctx: &egui::Context, font_delta: &mut f32) {
+    println!("\nDBG: incr: font_delta: {}\n", font_delta);
+    if *font_delta <= 50.0 {
+        *font_delta += 1.0;
+        println!("\nDBG: incr: font_delta: {}\n", font_delta);
+        set_all_fonts_size(ctx, *font_delta);
     }
-    //});
-    //crate::reset_button_with(ui, text_styles, default_text_styles());
-    //})
-    //.response
 }
 
-// https://docs.rs/egui/latest/egui/style/struct.Style.html
-    /// let mut style = (*ctx.style()).clone();
-    ///
-    /// // Redefine text_styles
-    /// style.text_styles = [
-    ///   (Heading, FontId::new(30.0, Proportional)),
-    ///   (Name("Heading2".into()), FontId::new(25.0, Proportional)),
-    ///   (Name("Context".into()), FontId::new(23.0, Proportional)),
-    ///   (Body, FontId::new(18.0, Proportional)),
-    ///   (Monospace, FontId::new(14.0, Proportional)),
-    ///   (Button, FontId::new(14.0, Proportional)),
-    ///   (Small, FontId::new(10.0, Proportional)),
-    /// ].into();
-    ///
-    /// // Mutate global style with above changes
-    /// ctx.set_style(style);
+fn decrease_all_fonts(ctx: &egui::Context, font_delta: &mut f32) {
+    println!("\nDBG: decr: font_delta: {}\n", font_delta);
+    if *font_delta >= 0.0 {
+        *font_delta -= 1.0;
+        println!("\nDBG: decr: font_delta: {}\n", font_delta);
+        set_all_fonts_size(ctx, *font_delta);
+    }
+}
+
+fn set_all_fonts_size(ctx: &egui::Context, font_delta: f32) {
+    println!("\nDBG: set: font_delta: {}\n", font_delta);
+    let mut style: egui::Style = (*ctx.style()).clone();
+    for (_, v) in style.text_styles.iter_mut() {
+        v.size += font_delta;
+    }
+    ctx.set_style(style);
+}

@@ -6,27 +6,22 @@ use crate::{decode_instr::DecodeInstr, instr_list::InstrList};
 #[derive(serde::Deserialize, serde::Serialize)]
 #[serde(default)]
 pub struct KompusimApp {
-    label: String,
-
     /// delta (font_delta * 0.5) for the default font size for all text styles
     font_delta: i32,
     show_settings: bool,
     instr_list: InstrList,
     decode_instr: DecodeInstr,
     // this how you opt-out of serialization of a member
-    #[serde(skip)]
-    value: f32,
+    // #[serde(skip)]
 }
 
 impl Default for KompusimApp {
     fn default() -> Self {
         Self {
-            label: "Kompusim".to_owned(),
             show_settings: false,
             font_delta: 0,
             instr_list: InstrList::default(),
             decode_instr: DecodeInstr::default(),
-            value: 2.7, // TODO: remove
         }
     }
 }
@@ -54,12 +49,10 @@ impl eframe::App for KompusimApp {
     /// Put your widgets into a `SidePanel`, `TopPanel`, `CentralPanel`, `Window` or `Area`.
     fn update(&mut self, ctx: &egui::Context, _frame: &mut eframe::Frame) {
         let Self {
-            label,
             show_settings,
             font_delta,
             instr_list,
             decode_instr,
-            value,
         } = self;
 
         egui::TopBottomPanel::top("top_panel").show(ctx, |ui| {
@@ -99,34 +92,6 @@ impl eframe::App for KompusimApp {
                     if ui.button("About").clicked() {
                         ui.close_menu();
                     }
-                });
-            });
-        });
-
-        egui::SidePanel::left("side_panel").show(ctx, |ui| {
-            ui.heading("Side Panel");
-
-            ui.horizontal(|ui| {
-                ui.label("Write something: ");
-                ui.text_edit_singleline(label);
-            });
-
-            ui.add(egui::Slider::new(value, 0.0..=10.0).text("value"));
-            if ui.button("Increment").clicked() {
-                *value += 1.0;
-            }
-
-            ui.with_layout(egui::Layout::bottom_up(egui::Align::LEFT), |ui| {
-                ui.horizontal(|ui| {
-                    ui.spacing_mut().item_spacing.x = 0.0;
-                    ui.label("powered by ");
-                    ui.hyperlink_to("egui", "https://github.com/emilk/egui");
-                    ui.label(" and ");
-                    ui.hyperlink_to(
-                        "eframe",
-                        "https://github.com/emilk/egui/tree/master/crates/eframe",
-                    );
-                    ui.label(".");
                 });
             });
         });

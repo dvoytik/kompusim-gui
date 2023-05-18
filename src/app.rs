@@ -1,4 +1,5 @@
 use eframe;
+use egui::Modifiers;
 
 use crate::{decode_instr::DecodeInstr, instr_list::InstrList};
 
@@ -55,8 +56,25 @@ impl eframe::App for KompusimApp {
             decode_instr,
         } = self;
 
+        // The top panel is for the menu bar:
         egui::TopBottomPanel::top("top_panel").show(ctx, |ui| {
-            // The top panel is often a good place for a menu bar:
+            // Shortcuts
+            let organize_windows_shortcut =
+                egui::KeyboardShortcut::new(Modifiers::CTRL | Modifiers::SHIFT, egui::Key::O);
+            if ui.input_mut(|i| i.consume_shortcut(&organize_windows_shortcut)) {
+                ctx.memory_mut(|mem| mem.reset_areas());
+            }
+
+            let inc_fonts_shortcut =
+                egui::KeyboardShortcut::new(Modifiers::CTRL, egui::Key::PlusEquals);
+            if ui.input_mut(|i| i.consume_shortcut(&inc_fonts_shortcut)) {
+                increase_all_fonts(ctx, font_delta);
+            }
+            let dec_fonts_shortcut = egui::KeyboardShortcut::new(Modifiers::CTRL, egui::Key::Minus);
+            if ui.input_mut(|i| i.consume_shortcut(&dec_fonts_shortcut)) {
+                decrease_all_fonts(ctx, font_delta);
+            }
+
             egui::menu::bar(ui, |ui| {
                 ui.menu_button("File", |ui| {
                     if ui.button("Settings").clicked() {
@@ -69,6 +87,8 @@ impl eframe::App for KompusimApp {
                     }
                 });
                 ui.menu_button("Instructions", |ui| {
+                    // hack to make menus oneliners
+                    ui.set_min_width(*font_delta as f32 * 10.0 + 150.0);
                     if ui.button("Instruction list").clicked() {
                         instr_list.open();
                         ui.close_menu();
@@ -79,12 +99,37 @@ impl eframe::App for KompusimApp {
                     }
                 });
                 ui.menu_button("View", |ui| {
-                    if ui.button("Increase font").clicked() {
+                    // hack to make menus oneliners
+                    ui.set_min_width(*font_delta as f32 * 10.0 + 150.0);
+                    if ui
+                        .add(
+                            egui::Button::new("Increase font")
+                                .shortcut_text(ui.ctx().format_shortcut(&inc_fonts_shortcut)),
+                        )
+                        .clicked()
+                    {
                         increase_all_fonts(ctx, font_delta);
                         ui.close_menu();
                     }
-                    if ui.button("Decrease font").clicked() {
+                    if ui
+                        .add(
+                            egui::Button::new("Decrease font")
+                                .shortcut_text(ui.ctx().format_shortcut(&dec_fonts_shortcut)),
+                        )
+                        .clicked()
+                    {
                         decrease_all_fonts(ctx, font_delta);
+                        ui.close_menu();
+                    }
+                    if ui
+                        .add(
+                            egui::Button::new("Organize windows").shortcut_text(
+                                ui.ctx().format_shortcut(&organize_windows_shortcut),
+                            ),
+                        )
+                        .clicked()
+                    {
+                        ui.ctx().memory_mut(|mem| mem.reset_areas());
                         ui.close_menu();
                     }
                 });

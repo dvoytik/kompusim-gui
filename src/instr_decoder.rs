@@ -1,3 +1,5 @@
+use kompusim::rv64i_disasm::disasm;
+
 #[derive(serde::Deserialize, serde::Serialize)]
 #[serde(default)]
 pub struct InstrDecoder {
@@ -6,6 +8,8 @@ pub struct InstrDecoder {
     font_size: usize,
 
     instr_hex: String,
+    #[serde(skip)]
+    instr_disasm: String,
 }
 
 impl Default for InstrDecoder {
@@ -14,6 +18,7 @@ impl Default for InstrDecoder {
             window_open: true,
             font_size: 0,
             instr_hex: String::with_capacity(8),
+            instr_disasm: String::with_capacity(32),
         }
     }
 }
@@ -42,14 +47,24 @@ impl InstrDecoder {
             .striped(true)
             .show(ui, |ui| {
                 ui.label("Hexadecimal");
-                ui.add(egui::TextEdit::singleline(&mut self.instr_hex).hint_text("in hex"));
+                let response = ui.add(
+                    egui::TextEdit::singleline(&mut self.instr_hex).hint_text("instruction in hex"),
+                );
+                if response.changed() {
+                    self.instr_disasm = disasm(hex_to_u64(&self.instr_hex), 0x0);
+                }
                 ui.end_row();
                 ui.label("Binary");
                 ui.label("0000 0000 0000 0000 0000 0000 0000 0000");
                 ui.end_row();
                 ui.label("Assembly");
-                ui.label("bne x0, x0, 0x8000004");
+                ui.label(&self.instr_disasm);
                 ui.end_row();
             });
     }
+}
+
+/// Convert hex str (e.g, "0x9393") to u32
+fn hex_to_u64(hex_str: &str) -> u32 {
+    u32::from_str_radix(hex_str.trim_start_matches("0x"), 16).unwrap_or_default()
 }

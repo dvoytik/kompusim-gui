@@ -1,6 +1,6 @@
 #[derive(serde::Deserialize, serde::Serialize)]
 #[serde(default)]
-pub struct DecodeInstr {
+pub struct InstrDecoder {
     /// Is window open or not
     window_open: bool,
     font_size: usize,
@@ -8,9 +8,9 @@ pub struct DecodeInstr {
     instr_hex: String,
 }
 
-impl Default for DecodeInstr {
-    fn default() -> DecodeInstr {
-        DecodeInstr {
+impl Default for InstrDecoder {
+    fn default() -> InstrDecoder {
+        InstrDecoder {
             window_open: true,
             font_size: 0,
             instr_hex: String::with_capacity(8),
@@ -18,7 +18,7 @@ impl Default for DecodeInstr {
     }
 }
 
-impl DecodeInstr {
+impl InstrDecoder {
     pub fn open(&mut self) {
         self.window_open = true;
     }
@@ -47,7 +47,7 @@ impl DecodeInstr {
                 ui.label("Binary");
                 ui.label("0000 0000 0000 0000 0000 0000 0000 0000");
                 ui.end_row();
-                ui.label("Assemblr");
+                ui.label("Assembly");
                 ui.label("bne x0, x0, 0x8000004");
                 ui.end_row();
             });

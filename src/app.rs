@@ -1,7 +1,7 @@
 use eframe;
 use egui::Modifiers;
 
-use crate::{decode_instr::DecodeInstr, instr_list::InstrList};
+use crate::{instr_decoder::InstrDecoder, instr_list::InstrList};
 
 /// Deserialize/Serialize so we can persist app state on shutdown.
 #[derive(serde::Deserialize, serde::Serialize)]
@@ -11,7 +11,7 @@ pub struct KompusimApp {
     font_delta: i32,
     show_settings: bool,
     instr_list: InstrList,
-    decode_instr: DecodeInstr,
+    decode_instr: InstrDecoder,
     // this how you opt-out of serialization of a member
     // #[serde(skip)]
 }
@@ -22,7 +22,7 @@ impl Default for KompusimApp {
             show_settings: false,
             font_delta: 0,
             instr_list: InstrList::default(),
-            decode_instr: DecodeInstr::default(),
+            decode_instr: InstrDecoder::default(),
         }
     }
 }
@@ -93,7 +93,7 @@ impl eframe::App for KompusimApp {
                         instr_list.open();
                         ui.close_menu();
                     }
-                    if ui.button("Decode instruction").clicked() {
+                    if ui.button("Instruction decoder").clicked() {
                         decode_instr.open();
                         ui.close_menu();
                     }
@@ -144,6 +144,7 @@ impl eframe::App for KompusimApp {
         egui::CentralPanel::default().show(ctx, |ui| {
             // The central panel the region left after adding TopPanel's and SidePanel's
             ui.heading("Kompusim");
+            ui.label("A RISC-V ISA simulator with focus on education and debug capabilities");
             ui.hyperlink("https://github.com/dvoytik/kompusim-gui");
             egui::warn_if_debug_build(ui);
         });

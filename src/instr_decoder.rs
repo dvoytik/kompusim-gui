@@ -1,24 +1,25 @@
-use kompusim::rv64i_disasm::disasm;
+use kompusim::rv64i_disasm::{disasm, u32_bin4};
 
 #[derive(serde::Deserialize, serde::Serialize)]
 #[serde(default)]
 pub struct InstrDecoder {
     /// Is window open or not
     window_open: bool,
-    font_size: usize,
 
     instr_hex: String,
     #[serde(skip)]
     instr_disasm: String,
+    #[serde(skip)]
+    instr_binary: String,
 }
 
 impl Default for InstrDecoder {
     fn default() -> InstrDecoder {
         InstrDecoder {
             window_open: true,
-            font_size: 0,
-            instr_hex: String::with_capacity(8),
-            instr_disasm: String::with_capacity(32),
+            instr_hex: String::with_capacity(16),
+            instr_disasm: String::new(),
+            instr_binary: String::new(),
         }
     }
 }
@@ -46,16 +47,22 @@ impl InstrDecoder {
             .spacing([40.0, 4.0])
             .striped(true)
             .show(ui, |ui| {
-                ui.label("Hexadecimal");
+                ui.label("Instruction");
                 let response = ui.add(
                     egui::TextEdit::singleline(&mut self.instr_hex).hint_text("instruction in hex"),
                 );
-                if response.changed() {
-                    self.instr_disasm = disasm(hex_to_u64(&self.instr_hex), 0x0);
+                if response.changed() || self.instr_disasm.len() == 0 {
+                    let instr = hex_to_u32(&self.instr_hex);
+                    self.instr_disasm = disasm(instr, 0x0); // TODO: add address
+                    self.instr_binary = u32_bin4(instr);
                 }
                 ui.end_row();
                 ui.label("Binary");
-                ui.label("0000 0000 0000 0000 0000 0000 0000 0000");
+                ui.vertical(|ui| {
+                    //ui.label(RichText::new("").monospace());
+                    ui.monospace("31   27   23   19   15   11   7    3   ");
+                    ui.monospace(&self.instr_binary);
+                });
                 ui.end_row();
                 ui.label("Assembly");
                 ui.label(&self.instr_disasm);
@@ -65,6 +72,6 @@ impl InstrDecoder {
 }
 
 /// Convert hex str (e.g, "0x9393") to u32
-fn hex_to_u64(hex_str: &str) -> u32 {
+fn hex_to_u32(hex_str: &str) -> u32 {
     u32::from_str_radix(hex_str.trim_start_matches("0x"), 16).unwrap_or_default()
 }

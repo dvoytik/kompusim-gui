@@ -77,6 +77,9 @@ impl eframe::App for KompusimApp {
 
             egui::menu::bar(ui, |ui| {
                 ui.menu_button("File", |ui| {
+                    if ui.button("Load binary").clicked() {
+                        ui.close_menu();
+                    }
                     if ui.button("Settings").clicked() {
                         *show_settings = true;
                         ui.close_menu();
@@ -86,7 +89,17 @@ impl eframe::App for KompusimApp {
                         _frame.close();
                     }
                 });
-                ui.menu_button("Instructions", |ui| {
+                ui.menu_button("Run", |ui| {
+                    // hack to make menus oneliners
+                    ui.set_min_width(*font_delta as f32 * 10.0 + 150.0);
+                    if ui.button("Run/Continue (unimplemented)").clicked() {
+                        ui.close_menu();
+                    }
+                    if ui.button("Step (unimplemented)").clicked() {
+                        ui.close_menu();
+                    }
+                });
+                ui.menu_button("Windows", |ui| {
                     // hack to make menus oneliners
                     ui.set_min_width(*font_delta as f32 * 10.0 + 150.0);
                     if ui.button("Instruction list").clicked() {
@@ -95,6 +108,9 @@ impl eframe::App for KompusimApp {
                     }
                     if ui.button("Instruction decoder").clicked() {
                         decode_instr.open();
+                        ui.close_menu();
+                    }
+                    if ui.button("Memory (unimplemented)").clicked() {
                         ui.close_menu();
                     }
                 });

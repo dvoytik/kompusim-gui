@@ -1,7 +1,7 @@
 use eframe;
 use egui::Modifiers;
 
-use crate::{instr_decoder::InstrDecoder, instr_list::InstrList};
+use crate::{instr_decoder::InstrDecoder, instr_list::InstrList, load_demo::LoadDemo};
 
 /// Deserialize/Serialize so we can persist app state on shutdown.
 #[derive(serde::Deserialize, serde::Serialize)]
@@ -12,6 +12,8 @@ pub struct KompusimApp {
     show_settings: bool,
     instr_list: InstrList,
     decode_instr: InstrDecoder,
+    #[serde(skip)]
+    load_demo: LoadDemo,
     // this how you opt-out of serialization of a member
     // #[serde(skip)]
 }
@@ -23,6 +25,7 @@ impl Default for KompusimApp {
             font_delta: 0,
             instr_list: InstrList::default(),
             decode_instr: InstrDecoder::default(),
+            load_demo: LoadDemo::default(),
         }
     }
 }
@@ -54,6 +57,7 @@ impl eframe::App for KompusimApp {
             font_delta,
             instr_list,
             decode_instr,
+            load_demo,
         } = self;
 
         // The top panel is for the menu bar:
@@ -77,7 +81,13 @@ impl eframe::App for KompusimApp {
 
             egui::menu::bar(ui, |ui| {
                 ui.menu_button("File", |ui| {
-                    if ui.button("Load binary").clicked() {
+                    // hack to make menus oneliners
+                    ui.set_min_width(*font_delta as f32 * 10.0 + 150.0);
+                    if ui.button("Load binary (unimplemented)").clicked() {
+                        ui.close_menu();
+                    }
+                    if ui.button("Load demo...").clicked() {
+                        load_demo.open();
                         ui.close_menu();
                     }
                     if ui.button("Settings").clicked() {
@@ -168,6 +178,8 @@ impl eframe::App for KompusimApp {
         instr_list.show(ctx);
 
         decode_instr.show(ctx);
+
+        load_demo.show(ctx);
 
         egui::Window::new("Settings")
             .open(show_settings)

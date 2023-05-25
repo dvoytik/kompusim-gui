@@ -15,15 +15,19 @@ impl LoadDemo {
     }
 
     pub fn show(&mut self, ctx: &egui::Context) {
-        let mut open = self.window_open;
-        egui::Window::new("Load demo")
-            .open(&mut open)
-            .resizable(true)
-            .default_width(400.0)
-            .show(ctx, |ui| {
-                self.show_window_content(ui);
-            });
-        self.window_open = open;
+        if self.window_open {
+            let mut window_opened = self.window_open;
+            egui::Window::new("Load demo")
+                .open(&mut window_opened)
+                .resizable(true)
+                .default_width(400.0)
+                .show(ctx, |ui| {
+                    self.show_window_content(ui);
+                });
+            if self.window_open {
+                self.window_open = window_opened;
+            }
+        }
     }
 
     fn show_window_content(&mut self, ui: &mut egui::Ui) {
@@ -33,10 +37,14 @@ impl LoadDemo {
             .striped(true)
             .show(ui, |ui| {
                 ui.label("Bare metal hello world with UART");
-                if ui.button("Load").clicked() {}
+                if ui.button("Load").clicked() {
+                    self.window_open = false;
+                }
                 ui.end_row();
                 ui.label("Linux kernel (unimplemented)");
-                if ui.button("Load").clicked() {}
+                if ui.button("Load").clicked() {
+                    self.window_open = false;
+                }
                 ui.end_row();
             });
     }

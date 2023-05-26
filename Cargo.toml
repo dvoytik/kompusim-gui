@@ -6,16 +6,16 @@ edition = "2021"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-egui = "0.21.0"
-eframe = { version = "0.21.0", default-features = false, features = [
+egui = "0.22.0"
+eframe = { version = "0.22.0", default-features = false, features = [
 #"accesskit",
   "default_fonts",
-  #"glow",
-  "wgpu",
+  "glow",
+  #"wgpu",
   "persistence",
   #"wayland",
 ]}
-egui_extras = "0.21.0"
+egui_extras = "0.22.0"
 kompusim = { git = "https://github.com/dvoytik/kompusim.git", branch = "main"}
 
 # app persistence:

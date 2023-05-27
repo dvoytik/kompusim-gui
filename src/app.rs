@@ -33,6 +33,8 @@ impl Default for KompusimApp {
 impl KompusimApp {
     /// Called once before the first frame.
     pub fn new(cc: &eframe::CreationContext<'_>) -> Self {
+        // Start simulator thread
+        //thread
         // Load previous app state (if any).
         if let Some(storage) = cc.storage {
             let app: KompusimApp = eframe::get_value(storage, eframe::APP_KEY).unwrap_or_default();

@@ -15,6 +15,7 @@ eframe = { version = "0.22.0", default-features = false, features = [
   "persistence",
   #"wayland",
 ]}
+log = "0.4"
 egui_extras = "0.22.0"
 kompusim = { git = "https://github.com/dvoytik/kompusim.git", branch = "main"}
 

@@ -1,7 +1,9 @@
 use eframe;
 use egui::Modifiers;
 
-use crate::{instr_decoder::InstrDecoder, instr_list::InstrList, load_demo::LoadDemo};
+use crate::{
+    instr_decoder::InstrDecoder, instr_list::InstrList, load_demo::LoadDemo, sim::Simulator,
+};
 
 /// Deserialize/Serialize so we can persist app state on shutdown.
 #[derive(serde::Deserialize, serde::Serialize)]
@@ -12,10 +14,10 @@ pub struct KompusimApp {
     show_settings: bool,
     instr_list: InstrList,
     decode_instr: InstrDecoder,
-    #[serde(skip)]
+    #[serde(skip)] // this how you opt-out of serialization of a member
     load_demo: LoadDemo,
-    // this how you opt-out of serialization of a member
-    // #[serde(skip)]
+    #[serde(skip)]
+    sim: Simulator,
 }
 
 impl Default for KompusimApp {
@@ -26,6 +28,7 @@ impl Default for KompusimApp {
             instr_list: InstrList::default(),
             decode_instr: InstrDecoder::default(),
             load_demo: LoadDemo::default(),
+            sim: Simulator::new(),
         }
     }
 }
@@ -60,6 +63,7 @@ impl eframe::App for KompusimApp {
             instr_list,
             decode_instr,
             load_demo,
+            sim,
         } = self;
 
         // The top panel is for the menu bar:

@@ -5,3 +5,4 @@ pub use app::KompusimApp;
 mod instr_decoder;
 mod instr_list;
 mod load_demo;
+mod sim;

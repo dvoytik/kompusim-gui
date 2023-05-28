@@ -51,6 +51,7 @@ impl KompusimApp {
 impl eframe::App for KompusimApp {
     /// Called by the frame work to save state before shutdown.
     fn save(&mut self, storage: &mut dyn eframe::Storage) {
+        self.sim.stop();
         eframe::set_value(storage, eframe::APP_KEY, self);
     }
 

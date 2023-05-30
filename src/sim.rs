@@ -4,6 +4,8 @@ use std::{
     thread,
 };
 
+use kompusim::{bus, device::Device, ram, rv64i_cpu::RV64ICpu, uart::Uart};
+
 pub struct Simulator {
     sim_thread: Option<thread::JoinHandle<()>>,
     cmd_channel: Sender<SimCommand>,
@@ -11,6 +13,8 @@ pub struct Simulator {
 
 enum SimCommand {
     Reset,
+    //Init,
+    LoadBin(&'static [u8]),
     Stop,
 }
 
@@ -20,11 +24,28 @@ impl Simulator {
         // Start the simulator thread
         let sim_thread_handler = thread::spawn(move || {
             loop {
+                let addr = 0x0000000080000000; // TODO: remove
+                let ram_sz = 4 * 1024; // TODO: remove
+                let ram = ram::Ram::new(addr, ram_sz);
+                let mut bus = bus::Bus::new();
+                bus.attach_ram(ram);
+                bus.attach_device(Device::new(
+                    Box::new(Uart::new("0".to_string())),
+                    0x1001_0000,
+                    0x20,
+                ));
+                let mut cpu0 = RV64ICpu::new(bus);
+                cpu0.regs.pc = addr;
+
                 let cmd = rx
                     .recv()
                     .expect("Simulator: Failed to receive from channel");
                 match cmd {
-                    SimCommand::Reset => println!("Simulator: reset command"),
+                    SimCommand::Reset => {
+                        println!("Simulator: reset command")
+                    }
+                    //SimCommand::Init => {}
+                    SimCommand::LoadBin(bin) => {}
                     SimCommand::Stop => break,
                 }
                 println!("Simulator: exiting the simulator thread");

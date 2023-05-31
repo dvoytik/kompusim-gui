@@ -12,9 +12,10 @@ pub struct Simulator {
 }
 
 enum SimCommand {
-    Reset,
+    //Reset,
     //Init,
     LoadBin(&'static [u8]),
+    Continue,
     Stop,
 }
 
@@ -23,29 +24,32 @@ impl Simulator {
         let (tx, rx): (Sender<SimCommand>, Receiver<SimCommand>) = mpsc::channel();
         // Start the simulator thread
         let sim_thread_handler = thread::spawn(move || {
-            loop {
-                let addr = 0x0000000080000000; // TODO: remove
-                let ram_sz = 4 * 1024; // TODO: remove
-                let ram = ram::Ram::new(addr, ram_sz);
-                let mut bus = bus::Bus::new();
-                bus.attach_ram(ram);
-                bus.attach_device(Device::new(
-                    Box::new(Uart::new("0".to_string())),
-                    0x1001_0000,
-                    0x20,
-                ));
-                let mut cpu0 = RV64ICpu::new(bus);
-                cpu0.regs.pc = addr;
+            let addr = 0x0000000080000000; // TODO: remove
+            let ram_sz = 4 * 1024; // TODO: remove
+            let ram = ram::Ram::new(addr, ram_sz);
+            let mut bus = bus::Bus::new();
+            bus.attach_ram(ram);
+            bus.attach_device(Device::new(
+                Box::new(Uart::new("0".to_string())),
+                0x1001_0000,
+                0x20,
+            ));
+            let mut cpu0 = RV64ICpu::new(bus);
+            cpu0.regs.pc = addr;
 
+            loop {
                 let cmd = rx
                     .recv()
                     .expect("Simulator: Failed to receive from channel");
                 match cmd {
-                    SimCommand::Reset => {
-                        println!("Simulator: reset command")
-                    }
+                    // SimCommand::Reset => {
+                    //     println!("Simulator: reset command")
+                    // }
                     //SimCommand::Init => {}
                     SimCommand::LoadBin(bin) => {}
+                    SimCommand::Continue => {
+                        let _ = cpu0.exec_continue(u64::MAX);
+                    }
                     SimCommand::Stop => break,
                 }
                 println!("Simulator: exiting the simulator thread");
@@ -68,4 +72,11 @@ impl Simulator {
             self.sim_thread.take().unwrap().join().unwrap();
         }
     }
+
+    // continue is a Rust keyword
+    pub fn carry_on(&self) {
+        self.cmd_channel.send(SimCommand::Continue).unwrap();
+    }
+
+    pub fn attach_serial() {}
 }

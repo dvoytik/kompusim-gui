@@ -2,6 +2,7 @@
 
 mod app;
 pub use app::KompusimApp;
+mod console;
 mod instr_decoder;
 mod instr_list;
 mod load_demo;

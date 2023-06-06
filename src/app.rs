@@ -2,7 +2,8 @@ use eframe;
 use egui::Modifiers;
 
 use crate::{
-    instr_decoder::InstrDecoder, instr_list::InstrList, load_demo::LoadDemo, sim::Simulator,
+    console::Console, instr_decoder::InstrDecoder, instr_list::InstrList, load_demo::LoadDemo,
+    sim::Simulator,
 };
 
 /// Deserialize/Serialize so we can persist app state on shutdown.
@@ -14,6 +15,7 @@ pub struct KompusimApp {
     show_settings: bool,
     instr_list: InstrList,
     decode_instr: InstrDecoder,
+    console: Console,
     #[serde(skip)] // this how you opt-out of serialization of a member
     load_demo: LoadDemo,
     #[serde(skip)]
@@ -28,6 +30,7 @@ impl Default for KompusimApp {
             instr_list: InstrList::default(),
             decode_instr: InstrDecoder::default(),
             load_demo: LoadDemo::default(),
+            console: Console::default(),
             sim: Simulator::new(),
         }
     }
@@ -64,6 +67,7 @@ impl eframe::App for KompusimApp {
             instr_list,
             decode_instr,
             load_demo,
+            console,
             sim,
         } = self;
 
@@ -127,6 +131,10 @@ impl eframe::App for KompusimApp {
                         decode_instr.open();
                         ui.close_menu();
                     }
+                    if ui.button("Console").clicked() {
+                        console.open();
+                        ui.close_menu();
+                    }
                     if ui.button("Memory (unimplemented)").clicked() {
                         ui.close_menu();
                     }
@@ -183,10 +191,9 @@ impl eframe::App for KompusimApp {
         });
 
         instr_list.show(ctx);
-
         decode_instr.show(ctx);
-
         load_demo.show(ctx);
+        console.show(ctx);
 
         egui::Window::new("Settings")
             .open(show_settings)

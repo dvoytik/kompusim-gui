@@ -1,4 +1,3 @@
-use core::time;
 use std::{
     sync::mpsc::{self, Receiver, Sender},
     thread,
@@ -52,11 +51,10 @@ impl Simulator {
                     }
                     SimCommand::Stop => break,
                 }
-                println!("Simulator: exiting the simulator thread");
                 //thread::sleep(time::Duration::from_secs(1));
-
                 // TODO: receive commands from the gui main thread
             }
+            println!("Simulator: exiting the simulator thread");
         });
         Simulator {
             sim_thread: Some(sim_thread_handler),

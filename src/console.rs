@@ -4,6 +4,8 @@ pub struct Console {
     /// Is the window open or not
     open: bool,
     //font_size: usize,
+    #[serde(skip)]
+    buffer: String,
 }
 
 impl Console {
@@ -19,9 +21,8 @@ impl Console {
             .default_width(400.0)
             .show(ctx, |ui| {
                 egui::ScrollArea::vertical().show(ui, |ui| {
-                    let mut out_bytes = String::new();
                     ui.add(
-                        egui::TextEdit::multiline(&mut out_bytes)
+                        egui::TextEdit::multiline(&mut self.buffer.as_str())
                             .font(egui::TextStyle::Monospace) // for cursor height
                             .code_editor()
                             .desired_rows(10)

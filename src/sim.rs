@@ -20,7 +20,8 @@ enum SimCommand {
 
 impl Simulator {
     pub fn new() -> Self {
-        let (tx, rx): (Sender<SimCommand>, Receiver<SimCommand>) = mpsc::channel();
+        let (cmd_tx, cmd_rx): (Sender<SimCommand>, Receiver<SimCommand>) = mpsc::channel();
+
         // Start the simulator thread
         let sim_thread_handler = thread::spawn(move || {
             let addr = 0x0000000080000000; // TODO: remove
@@ -37,7 +38,7 @@ impl Simulator {
             cpu0.regs.pc = addr;
 
             loop {
-                let cmd = rx
+                let cmd = cmd_rx
                     .recv()
                     .expect("Simulator: Failed to receive from channel");
                 match cmd {
@@ -58,7 +59,7 @@ impl Simulator {
         });
         Simulator {
             sim_thread: Some(sim_thread_handler),
-            cmd_channel: tx,
+            cmd_channel: cmd_tx,
         }
     }
 

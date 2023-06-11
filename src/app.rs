@@ -114,6 +114,7 @@ impl eframe::App for KompusimApp {
                     // hack to make menus oneliners
                     ui.set_min_width(*font_delta as f32 * 10.0 + 150.0);
                     if ui.button("Run/Continue (unimplemented)").clicked() {
+                        sim.carry_on();
                         ui.close_menu();
                     }
                     if ui.button("Step (unimplemented)").clicked() {

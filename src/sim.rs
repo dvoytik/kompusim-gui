@@ -19,6 +19,11 @@ enum SimCommand {
 }
 
 impl Simulator {
+    fn uart_out_to_console(octet: u8) {
+        let char_ascii = octet as char;
+        print!("{char_ascii}");
+    }
+
     pub fn new() -> Self {
         let (cmd_tx, cmd_rx): (Sender<SimCommand>, Receiver<SimCommand>) = mpsc::channel();
 
@@ -29,11 +34,11 @@ impl Simulator {
             let ram = ram::Ram::new(addr, ram_sz);
             let mut bus = bus::Bus::new();
             bus.attach_ram(ram);
-            bus.attach_device(Device::new(
-                Box::new(Uart::new("0".to_string())),
-                0x1001_0000,
-                0x20,
-            ));
+
+            let mut uart0 = Box::new(Uart::new("0".to_string()));
+            uart0.register_out_callback(Self::uart_out_to_console);
+            bus.attach_device(Device::new(uart0, 0x1001_0000, 0x20));
+
             let mut cpu0 = RV64ICpu::new(bus);
             cpu0.regs.pc = addr;
 

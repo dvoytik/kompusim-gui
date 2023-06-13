@@ -13,7 +13,7 @@ pub struct Simulator {
 enum SimCommand {
     //Reset,
     //Init,
-    LoadBin(&'static [u8]),
+    LoadImage((u64, &'static [u8])),
     Continue,
     Stop,
 }
@@ -51,7 +51,9 @@ impl Simulator {
                     //     println!("Simulator: reset command")
                     // }
                     //SimCommand::Init => {}
-                    SimCommand::LoadBin(bin) => {}
+                    SimCommand::LoadImage((load_addr, image)) => {
+                        cpu0.bus.load_image(load_addr, image).unwrap()
+                    }
                     SimCommand::Continue => {
                         let _ = cpu0.exec_continue(u64::MAX);
                     }
@@ -75,6 +77,12 @@ impl Simulator {
             }
             self.sim_thread.take().unwrap().join().unwrap();
         }
+    }
+
+    pub fn load_image(&mut self, addr: u64, image: &'static [u8]) {
+        self.cmd_channel
+            .send(SimCommand::LoadImage((addr, image)))
+            .unwrap();
     }
 
     // continue is a Rust keyword

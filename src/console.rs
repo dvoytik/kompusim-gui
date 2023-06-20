@@ -13,7 +13,10 @@ impl Console {
         self.open = true;
     }
 
-    pub fn show(&mut self, ctx: &egui::Context) {
+    pub fn show(&mut self, ctx: &egui::Context, new_byte: Option<u8>) {
+        if let Some(byte) = new_byte {
+            self.buffer.push(byte as char)
+        }
         let mut open = self.open;
         egui::Window::new("Console")
             .open(&mut open)

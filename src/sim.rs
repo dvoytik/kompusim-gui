@@ -1,5 +1,5 @@
 use std::{
-    sync::mpsc::{self, Receiver, Sender},
+    sync::mpsc::{self, Receiver, Sender, TryRecvError},
     thread,
 };
 
@@ -8,6 +8,8 @@ use kompusim::{bus, device::Device, ram, rv64i_cpu::RV64ICpu, uart::Uart};
 pub struct Simulator {
     sim_thread: Option<thread::JoinHandle<()>>,
     cmd_channel: Sender<SimCommand>,
+    /// UART TX receive queue
+    uart_tx_recv: Receiver<u8>,
 }
 
 enum SimCommand {
@@ -19,13 +21,9 @@ enum SimCommand {
 }
 
 impl Simulator {
-    fn uart_out_to_console(octet: u8) {
-        let char_ascii = octet as char;
-        print!("{char_ascii}");
-    }
-
     pub fn new() -> Self {
         let (cmd_tx, cmd_rx): (Sender<SimCommand>, Receiver<SimCommand>) = mpsc::channel();
+        let (uart_tx_send, uart_tx_recv): (Sender<u8>, Receiver<u8>) = mpsc::channel();
 
         // Start the simulator thread
         let sim_thread_handler = thread::spawn(move || {
@@ -36,7 +34,11 @@ impl Simulator {
             bus.attach_ram(ram);
 
             let mut uart0 = Box::new(Uart::new("0".to_string()));
-            uart0.register_out_callback(Self::uart_out_to_console);
+            uart0.register_out_callback(Box::new(move |b: u8| {
+                if let Err(err) = uart_tx_send.send(b) {
+                    println!("Simulator: failed to send command: {}", err);
+                }
+            }));
             bus.attach_device(Device::new(uart0, 0x1001_0000, 0x20));
 
             let mut cpu0 = RV64ICpu::new(bus);
@@ -67,6 +69,7 @@ impl Simulator {
         Simulator {
             sim_thread: Some(sim_thread_handler),
             cmd_channel: cmd_tx,
+            uart_tx_recv,
         }
     }
 
@@ -85,10 +88,19 @@ impl Simulator {
             .unwrap();
     }
 
-    // continue is a Rust keyword
+    // continue is a Rust keyword, so use carry_on()
     pub fn carry_on(&self) {
         self.cmd_channel.send(SimCommand::Continue).unwrap();
     }
 
-    pub fn attach_serial() {}
+    pub fn console_recv(&self) -> Option<u8> {
+        match self.uart_tx_recv.try_recv() {
+            Ok(byte) => Some(byte),
+            Err(TryRecvError::Empty) => None,
+            Err(TryRecvError::Disconnected) => {
+                println!("Simulator: FATAL ERROR: got Disconnected on UART TX receive attemp");
+                None
+            }
+        }
+    }
 }

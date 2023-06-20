@@ -194,7 +194,7 @@ impl eframe::App for KompusimApp {
         instr_list.show(ctx);
         decode_instr.show(ctx);
         load_demo.show(ctx);
-        console.show(ctx);
+        console.show(ctx, sim.console_recv());
 
         egui::Window::new("Settings")
             .open(show_settings)

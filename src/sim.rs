@@ -54,7 +54,8 @@ impl Simulator {
                     // }
                     //SimCommand::Init => {}
                     SimCommand::LoadImage((load_addr, image)) => {
-                        cpu0.bus.load_image(load_addr, image).unwrap()
+                        cpu0.bus.load_image(load_addr, image).unwrap();
+                        println!("Simulator: image loaded at 0x{:x}", load_addr);
                     }
                     SimCommand::Continue => {
                         let _ = cpu0.exec_continue(u64::MAX);

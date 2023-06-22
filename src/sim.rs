@@ -83,10 +83,14 @@ impl Simulator {
         }
     }
 
+    fn send_cmd(&self, cmd: SimCommand) {
+        match self.cmd_channel.send(cmd) {
+            Err(e) => println!("FAILED to send command. Error: {}", e),
+            Ok(_) => {}
+        }
+    }
     pub fn load_image(&mut self, addr: u64, image: &'static [u8]) {
-        self.cmd_channel
-            .send(SimCommand::LoadImage((addr, image)))
-            .unwrap();
+        self.send_cmd(SimCommand::LoadImage((addr, image)));
     }
 
     // continue is a Rust keyword, so use carry_on()
@@ -94,14 +98,22 @@ impl Simulator {
         self.cmd_channel.send(SimCommand::Continue).unwrap();
     }
 
-    pub fn console_recv(&self) -> Option<u8> {
-        match self.uart_tx_recv.try_recv() {
-            Ok(byte) => Some(byte),
-            Err(TryRecvError::Empty) => None,
-            Err(TryRecvError::Disconnected) => {
-                println!("Simulator: FATAL ERROR: got Disconnected on UART TX receive attemp");
-                None
+    pub fn console_recv(&self) -> Option<String> {
+        let mut new_bytes = String::new();
+        loop {
+            match self.uart_tx_recv.try_recv() {
+                Ok(byte) => new_bytes.push(byte as char),
+                Err(TryRecvError::Empty) => break,
+                Err(TryRecvError::Disconnected) => {
+                    println!("Simulator: FATAL ERROR: got Disconnected on UART TX receive attemp");
+                    break;
+                }
             }
+        }
+        if new_bytes.len() > 0 {
+            Some(new_bytes)
+        } else {
+            None
         }
     }
 }

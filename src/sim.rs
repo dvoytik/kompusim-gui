@@ -1,5 +1,5 @@
 use std::{
-    sync::mpsc::{self, Receiver, Sender, TryRecvError},
+    sync::mpsc::{self, Receiver, RecvError, Sender, TryRecvError},
     thread,
 };
 
@@ -45,22 +45,26 @@ impl Simulator {
             cpu0.regs.pc = addr;
 
             loop {
-                let cmd = cmd_rx
-                    .recv()
-                    .expect("Simulator: Failed to receive from channel");
-                match cmd {
+                match cmd_rx.try_recv() {
+                    Err(TryRecvError::Empty) => {
+                        // TODO: state machine
+                    }
+                    Err(TryRecvError::Disconnected) => {
+                        eprintln!("ERROR: disconnected from the cmd channel");
+                        break;
+                    }
                     // SimCommand::Reset => {
                     //     println!("Simulator: reset command")
                     // }
                     //SimCommand::Init => {}
-                    SimCommand::LoadImage((load_addr, image)) => {
+                    Ok(SimCommand::LoadImage((load_addr, image))) => {
                         cpu0.bus.load_image(load_addr, image).unwrap();
                         println!("Simulator: image loaded at 0x{:x}", load_addr);
                     }
-                    SimCommand::Continue => {
-                        let _ = cpu0.exec_continue(u64::MAX);
+                    Ok(SimCommand::Continue) => {
+                        let _ = cpu0.exec_continue(1024);
                     }
-                    SimCommand::Stop => break,
+                    Ok(SimCommand::Stop) => break,
                 }
                 //thread::sleep(time::Duration::from_secs(1));
                 // TODO: receive commands from the gui main thread
@@ -99,13 +103,14 @@ impl Simulator {
     }
 
     pub fn console_recv(&self) -> Option<String> {
+        // TODO: pass &String and push to it instead of allocating every time
         let mut new_bytes = String::new();
         loop {
             match self.uart_tx_recv.try_recv() {
                 Ok(byte) => new_bytes.push(byte as char),
                 Err(TryRecvError::Empty) => break,
                 Err(TryRecvError::Disconnected) => {
-                    println!("Simulator: FATAL ERROR: got Disconnected on UART TX receive attemp");
+                    println!("Simulator: FATAL ERROR: got Disconnected on UART TX receive attempt");
                     break;
                 }
             }

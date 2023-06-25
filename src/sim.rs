@@ -12,12 +12,18 @@ pub struct Simulator {
     uart_tx_recv: Receiver<u8>,
 }
 
+#[derive(PartialEq)]
+enum SimState {
+    Stopped,
+    Running,
+}
 enum SimCommand {
     //Reset,
     //Init,
     LoadImage((u64, &'static [u8])),
     Continue,
     Stop,
+    NoCmd,
 }
 
 impl Simulator {
@@ -44,27 +50,43 @@ impl Simulator {
             let mut cpu0 = RV64ICpu::new(bus);
             cpu0.regs.pc = addr;
 
+            let mut sim_state = SimState::Stopped;
             loop {
-                match cmd_rx.try_recv() {
-                    Err(TryRecvError::Empty) => {
-                        // TODO: state machine
+                let recv_cmd = if sim_state == SimState::Stopped {
+                    cmd_rx.recv().unwrap()
+                } else {
+                    match cmd_rx.try_recv() {
+                        Err(TryRecvError::Empty) => {
+                            // TODO: state machine
+                            println!("no commands");
+                            SimCommand::NoCmd
+                        }
+                        Err(TryRecvError::Disconnected) => {
+                            eprintln!("ERROR: disconnected from the cmd channel");
+                            break;
+                        }
+                        Ok(cmd) => cmd,
                     }
-                    Err(TryRecvError::Disconnected) => {
-                        eprintln!("ERROR: disconnected from the cmd channel");
-                        break;
-                    }
+                };
+                match recv_cmd {
                     // SimCommand::Reset => {
                     //     println!("Simulator: reset command")
                     // }
                     //SimCommand::Init => {}
-                    Ok(SimCommand::LoadImage((load_addr, image))) => {
+                    SimCommand::LoadImage((load_addr, image)) => {
                         cpu0.bus.load_image(load_addr, image).unwrap();
                         println!("Simulator: image loaded at 0x{:x}", load_addr);
                     }
-                    Ok(SimCommand::Continue) => {
+                    SimCommand::Continue => {
+                        sim_state = SimState::Running;
                         let _ = cpu0.exec_continue(1024);
                     }
-                    Ok(SimCommand::Stop) => break,
+                    SimCommand::Stop => break,
+                    SimCommand::NoCmd => {
+                        if sim_state == SimState::Running {
+                            let _ = cpu0.exec_continue(1024);
+                        }
+                    }
                 }
                 //thread::sleep(time::Duration::from_secs(1));
                 // TODO: receive commands from the gui main thread
